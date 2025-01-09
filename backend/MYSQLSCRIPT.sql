@@ -14,7 +14,29 @@ CREATE TABLE rooms (
 
 SELECT * FROM rooms;
 
+SELECT room_number, type, price 
+FROM rooms 
+WHERE status = 'Booked';
+
+  SELECT r.room_number, r.type, r.price
+            FROM rooms r
+            WHERE r.status = 'Booked';
+
 SELECT * FROM bookings;
+
+UPDATE rooms
+SET status = 'Available'  -- Change 'New Status' to the status you want
+WHERE room_number = 101;
+
+
+SET SQL_SAFE_UPDATES = 0;
+DELETE FROM bookings;
+SET SQL_SAFE_UPDATES = 1;
+
+DELETE FROM bookings
+WHERE id > 0;
+
+DROP TABLE bookings;
 
 -- Create the 'bookings' table to store booking details including phone number
 CREATE TABLE bookings (

@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LuxStay Hotel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>LuxStay Hotel</h1>
+            <nav>
+                <ul>
+                    <li><a href="#rooms">Rooms</a></li>
+                    <li><a href="#book">Book a Room</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <section id="hero" class="hero">
+        <div class="hero-content">
+            <h2>Welcome to LuxStay</h2>
+            <p>Experience ultimate comfort and luxury. Book your stay today!</p>
+            <a href="#book" class="cta-button">Book Now</a>
+        </div>
+    </section>
+
+    <section id="rooms" class="rooms-section container">
+        <h2>Available Rooms</h2>
+        <div id="room-list" class="room-list">
+            <!-- Rooms will be dynamically loaded here -->
+        </div>
+    </section>
+    <section id="book" class="booking-section">
+        <h2>Book Your Stay</h2>
+        <form id="booking-form" class="booking-form">
+            <input
+                type="text"
+                id="userName"
+                placeholder="Enter your name"
+                required
+                pattern="[A-Za-z\s]+"
+                title="Name should only contain letters and spaces."
+            />
+            <input
+                type="tel"
+                id="phoneNumber"
+                placeholder="Enter your phone number"
+                required
+                pattern="^\d{10}$"
+                title="Phone number should be 10 digits."
+            />
+            <input type="date" id="checkIn" required />
+            <input type="date" id="checkOut" required />
+            <select id="roomNumber" required>
+                <option value="">Select Room</option>
+                <!-- Room options will be dynamically populated -->
+             </select>
+            <button type="submit">Book Now</button>
+        </form>
+    </section>
+    
+    
+
+
+    <section id="cancel-booking" class="cancel-booking-section">
+        <h2>Cancel Your Booking</h2>
+        <form id="cancel-booking-form" class="cancel-booking-form">
+            <input
+                type="text"
+                id="cancelUserName"
+                placeholder="Enter your name"
+                required
+                pattern="[A-Za-z\s]+"
+                title="Name should only contain letters and spaces."
+            />
+            <input
+                type="tel"
+                id="cancelPhoneNumber"
+                placeholder="Enter your phone number"
+                required
+                pattern="^\d{10}$"
+                title="Phone number should be 10 digits."
+            />
+            <select id="cancelRoomNumber" required>
+                <option value="">Select Room to Cancel</option>
+                <!-- Room options will be dynamically populated here -->
+            </select>
+            <button type="submit">Cancel Booking</button>
+        </form>
+    </section>
+    
+    
+    
+    
+    
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 LuxStay Hotel</p>
+        </div>
+    </footer>
+
+
+   <!-- Popup Modal -->
+   <div class="popup" id="roomPopup">
+    <div class="popup-content">
+      <button class="close-btn" id="closePopup">&times;</button>
+      <img id="popupImage" src="" alt="Room Image">
+      <h2 id="popupTitle"></h2>
+      <p id="popupDescription"></p>
+      <p><strong>Price:</strong> $<span id="popupPrice"></span> / night</p>
+    </div>
+  </div>
+    
+    <script src="script.js"></script>
+</body>
+</html>                                                                                                                                                document.addEventListener('DOMContentLoaded', () => {
+    const cancelBookingForm = document.getElementById('cancel-booking-form');
+    const cancelRoomNumberSelect = document.getElementById('cancelRoomNumber');
+    const cancelUserNameInput = document.getElementById('cancelUserName');
+    const cancelPhoneNumberInput = document.getElementById('cancelPhoneNumber');
+
+    fetchRooms();
+    document.getElementById('booking-form').addEventListener('submit', bookRoom);
+
+    // Fetch current bookings and populate the cancel booking select input
+    function loadBookings() {
+        fetch('http://localhost:3000/api/bookings')  // Ensure the correct URL
+            .then(response => response.json())
+            .then(data => {
+                data.rooms.forEach(room => {
+                    const option = document.createElement('option');
+                    option.value = room.room_number;
+                    option.textContent = Room ${room.room_number} - ${room.type};
+                    cancelRoomNumberSelect.appendChild(option);
+                });
+            })
+            .catch(error => {
+                console.error('Error loading rooms:', error);
+            });
+    }
+
+    // Handle cancel booking form submission
+    cancelBookingForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+
+        const userName = cancelUserNameInput.value;
+        const phoneNumber = cancelPhoneNumberInput.value;
+        const roomNumber = cancelRoomNumberSelect.value;
+
+        if (!userName || !phoneNumber || !roomNumber) {
+            alert('Please fill in all fields');
+            return;
+        }
+
+        // Send cancellation request to the backend
+        fetch('http://localhost:3000/api/cancel-booking', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                user_name: userName,
+                phone_number: phoneNumber,
+                room_number: roomNumber,
+            }),
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Booking cancelled successfully');
+                    updateRoomStatus(roomNumber);
+                } else {
+                    alert('Cancellation failed. Please check your details and try again.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again later.');
+            });
+    });
+
+    // Function to update the room status to 'Available'
+    function updateRoomStatus(roomNumber) {
+        // Update the UI for the cancelled room
+        const roomSelect = document.getElementById('roomNumber');
+        const roomOptions = roomSelect.querySelectorAll('option');
+
+        roomOptions.forEach(option => {
+            if (option.value === roomNumber) {
+                option.textContent = Room ${roomNumber} - Available;
+                option.style.color = 'green';
+            }
+        });
+    }
+
+    loadBookings();
+});
+
+//Booking failed: Booking successful!
+async function fetchRooms() {
+    try {
+        const response = await fetch('http://localhost:3000/rooms');
+        const rooms = await response.json();
+        const roomList = document.getElementById('room-list');
+        const roomDropdown = document.getElementById('roomNumber'); // Room dropdown
+        roomDropdown.innerHTML = '<option value="">Select Room</option>'; // Reset dropdown
+        roomList.innerHTML = '';
+
+        rooms.forEach((room) => {
+            // Update the dropdown for available rooms
+            if (room.status === 'Available') {
+                const option = document.createElement('option');
+                option.value = room.room_number;
+                option.textContent = Room ${room.room_number} - ${room.type};
+                roomDropdown.appendChild(option);
+            }
+
+            // Display room details in the room list
+            const roomDiv = document.createElement('div');
+            roomDiv.classList.add('room');
+            roomDiv.innerHTML = 
+                <h3>Room ${room.room_number}</h3>
+                <p>${room.type}</p>
+                <p>$${room.price} per night</p>
+                <p class="status">${room.status}</p>
+            ;
+
+            // If room is available, allow users to click and view more details
+            if (room.status === 'Available') {
+                roomDiv.addEventListener('click', () => openRoomModal(room));
+            } else {
+                // If the room is booked, disable it
+                roomDiv.classList.add('booked');
+                roomDiv.style.cursor = 'not-allowed';
+                roomDiv.addEventListener('click', () => alert('This room is already booked.'));
+            }
+
+            roomList.appendChild(roomDiv);
+        });
+    } catch (error) {
+        console.error('Error fetching rooms:', error);
+    }
+}
+
+
+async function bookRoom(event) {
+    event.preventDefault();
+
+    const userName = document.getElementById('userName').value;
+    const phoneNumber = document.getElementById('phoneNumber').value;
+    const checkIn = document.getElementById('checkIn').value;
+    const checkOut = document.getElementById('checkOut').value;
+    const roomNumber = document.getElementById('roomNumber').value;
+
+    if (!roomNumber) {
+        alert('Please select a room.');
+        return;
+    }
+
+    if (!/^\d{10}$/.test(phoneNumber)) {
+        alert("Please enter a valid phone number.");
+        return;
+    }
+
+    const response = await fetch('http://localhost:3000/book-room', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userName, phoneNumber, checkIn, checkOut, roomNumber })
+    });
+
+    const data = await response.json();
+
+    // Check if the response has a success message
+    if (response.ok && data.message === "Booking successful!") {
+        alert('Room booked successfully!');
+        fetchRooms();
+    } else {
+        // Display error message if booking fails
+        alert('Booking failed: ' + (data.error || 'Unknown error'));
+    }
+}
+
+
+  // Function to open the modal with room details
+function openRoomModal(room) {
+    const modal = document.getElementById('roomPopup');
+    const popupImage = document.getElementById('popupImage');
+    const popupTitle = document.getElementById('popupTitle');
+    const popupDescription = document.getElementById('popupDescription');
+    const popupPrice = document.getElementById('popupPrice');
+
+    // Set modal content
+    popupImage.src = getRandomRoomImage(room.type); // Get room image
+    popupTitle.textContent = Room ${room.room_number} - ${room.type};
+    popupDescription.textContent = generateRoomDescription(room.type);
+    popupPrice.textContent = room.price;
+
+    // Display the modal
+    modal.style.display = 'flex';
+
+    // Close the modal when clicking the close button
+    document.getElementById('closePopup').addEventListener('click', () => {
+        modal.style.display = 'none';
+    });
+
+    // Close the modal when clicking outside the modal content
+    modal.addEventListener('click', (event) => {
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
+}
+
+
+
+
+// Function to get room image based on the room type
+function getRandomRoomImage(type) {
+    const images = {
+        'Deluxe Room': './public/images/image1.webp',
+        'Suite': './public/images/image2.jpeg',
+        'Standard Room': './public/images/image3.jpeg',
+        'Family Room': './public/images/image4.jpeg',
+        'Single Room': './public/images/image5.jpeg',
+        'Luxury Suite': './public/images/image6.jpeg',
+        'Presidential Suite': './public/images/image7.jpeg',
+    };
+    return images[type] || './public/images/image8.jpeg'; // Default image
+}
+
+
+
+
+// Function to generate room description based on room type
+function generateRoomDescription(type) {
+    const descriptions = {
+        'Deluxe Room': 'A cozy deluxe room with modern amenities and a comfortable bed.',
+        'Suite': 'Spacious suite with elegant décor and a stunning view.',
+        'Standard Room': 'A budget-friendly room with essential facilities.',
+        'Family Room': 'Perfect for families with ample space and comfort.',
+        'Single Room': 'Ideal for solo travelers with a cozy and private setup.',
+        'Luxury Suite': 'A luxurious suite with premium amenities and breathtaking views.',
+        'Presidential Suite': 'Unparalleled luxury and service in the most exclusive room.',
+    };
+    return descriptions[type] || 'A beautiful room designed for comfort and relaxation.';
+}
+ /* General Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    line-height: 1.6;
+    background-color: #F8F8F8;
+    color: #333;
+}
+
+/* Header */
+header {
+    background-color: #4CAF50; /* Green */
+    color: white;
+    padding: 20px 0;
+}
+
+header .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+header h1 {
+    font-size: 2.5rem;
+}
+
+header nav ul {
+    display: flex;
+    list-style: none;
+}
+
+header nav ul li {
+    margin-left: 20px;
+}
+
+header nav ul li a {
+    color: white;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 1.1rem;
+    text-transform: uppercase;
+}
+
+header nav ul li a:hover {
+    color: #FFD700; /* Gold */
+}
+
+/* Hero Section */
+.hero {
+    background: url('https://images.unsplash.com/photo-1600585154340-be6161a56a0c') center/cover no-repeat;
+    padding: 100px 20px;
+    color: white;
+    text-align: center;
+    background-color: #333; /* Fallback color */
+}
+
+.hero h2 {
+    font-size: 3rem;
+    margin-bottom: 15px;
+}
+
+.hero p {
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+}
+
+.cta-button {
+    background-color: #FFD700; /* Gold */
+    color: #333;
+    padding: 12px 30px;
+    text-decoration: none;
+    border-radius: 5px;
+    font-weight: bold;
+    font-size: 1.2rem;
+    transition: background-color 0.3s;
+}
+
+.cta-button:hover {
+    background-color: #ff6a00; /* Orange */
+}
+
+/* Rooms Section */
+.rooms-section {
+    padding: 50px 20px;
+    text-align: center;
+    background-color: #fff5f0; /* Light Cream */
+}
+
+.rooms-section h2 {
+    font-size: 2.5rem;
+    margin-bottom: 30px;
+    color: #4CAF50; /* Green */
+}
+
+.room-list {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    justify-content: center;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.room {
+    background-color: rgb(87, 236, 87);/* Cornsilk */
+    border-radius: 15px;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    text-align: center;
+    transition: transform 0.3s;
+}
+
+.room:hover {
+    transform: translateY(-10px);
+}
+
+.room h3 {
+    font-size: 1.8rem;
+    color: #FF6347; /* Tomato */
+    margin-bottom: 10px;
+}
+
+.room p {
+    font-size: 1rem;
+    color: #555;
+}
+
+/* Booking Section */
+.booking-section {
+    background-color: #FFF8DC;
+    padding: 50px 20px;
+    text-align: center;
+}
+
+.booking-section h2 {
+    font-size: 2rem;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+/* Booking Form */
+.booking-form {
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+/* Input Fields and Select Field Styling */
+.booking-form input,
+.booking-form select {
+    width: 100%;
+    padding: 12px;
+    margin: 10px 0;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+    color: #333;
+    background-color: #f9f9f9;
+    font-family: "Poppins", sans-serif;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.booking-form input:focus,
+.booking-form select:focus {
+    border-color: #4CAF50;
+    box-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
+    outline: none;
+}
+
+/* Button Styling */
+.booking-form button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.2rem;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.booking-form button:hover {
+    background-color: #388E3C;
+    transform: translateY(-2px);
+}
+
+/* Footer */
+footer {
+    background-color: #4CAF50;
+    color: white;
+    padding: 20px 0;
+    text-align: center;
+}
+
+footer p {
+    font-size: 1rem;
+}
+
+
+/* General Styles */
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background: #f5f5f5;
+    text-align: center;
+  }
+  
+  h1 {
+    margin-top: 20px;
+    color: #333;
+  }
+  
+  /* Rooms Grid */
+  .rooms-grid {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+    padding: 20px;
+  }
+  
+  .room-card {
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    width: 200px;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+  }
+  
+  .room-card:hover {
+    transform: scale(1.05);
+  }
+  
+  .room-image {
+    width: 100%;
+    height: 150px;
+    object-fit: cover;
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+  }
+  
+  .room-details {
+    padding: 10px;
+  }
+  
+  .room-details h2 {
+    margin: 10px 0 5px;
+    font-size: 18px;
+    color: #333;
+  }
+  
+  .room-details p {
+    margin: 5px 0;
+    color: #555;
+  }
+  
+  /* Popup Modal */
+  .popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+  
+  .popup-content {
+    background: #fff;
+    padding: 20px;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 400px;
+    text-align: center;
+    position: relative;
+  }
+  
+  .popup-content img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    border-radius: 8px;
+  }
+  
+  .close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #ff0000;
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    font-size: 18px;
+    cursor: pointer;
+  }
+  
+  .popup-content h2 {
+    margin-top: 15px;
+    color: #333;
+  }
+  
+  .popup-content p {
+    color: #555;
+    margin: 10px 0;
+  }
+  
+
+  .room.booked {
+    opacity: 0.6;
+    background-color: #f0f0f0;
+}
+
+.room.booked .status {
+    color: red;
+}
+
+
+/* Add styles for the cancel booking form */
+.cancel-booking-section {
+    padding: 40px;
+    background-color: #f1f1f1;
+    margin-top: 40px;
+    border-radius: 10px;
+}
+
+.cancel-booking-form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.cancel-booking-form input,
+.cancel-booking-form select,
+.cancel-booking-form button {
+    padding: 10px;
+    font-size: 16px;
+    border: 2px solid #ccc;
+    border-radius: 5px;
+}
+
+.cancel-booking-form button {
+    background-color: #f44336;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+.cancel-booking-form button:hover {
+    background-color: #d32f2f;
+}                                                                                       const express = require('express');
+const mysql = require('mysql2/promise');
+const cors = require('cors');
+const bodyParser = require('body-parser');
+
+// Initialize Express app
+const app = express();
+
+// Middleware
+app.use(cors());
+app.use(bodyParser.json());
+
+// Set up MySQL connection pool
+const db = mysql.createPool({
+    host: 'localhost',
+    user: 'root',
+    password: 'manojMSMK00@',
+    database: 'hotel_booking',
+    port: 3306,
+});
+
+// Test database connection
+db.getConnection()
+    .then(() => console.log('Connected to the MySQL database'))
+    .catch((err) => {
+        console.error('Error connecting to the database:', err);
+        process.exit(1);
+    });
+
+// Get available rooms
+app.get('/rooms', async (req, res) => {
+    try {
+        const [results] = await db.query('SELECT * FROM rooms');
+        res.json(results);
+    } catch (err) {
+        console.error('Error fetching rooms:', err);
+        res.status(500).json({ success: false, message: 'Error fetching rooms' });
+    }
+});
+
+// Handle booking requests
+app.post('/book-room', async (req, res) => {
+    const { userName, phoneNumber, checkIn, checkOut, roomNumber } = req.body;
+
+    // Input validation
+    if (!userName || !phoneNumber || !checkIn || !checkOut || !roomNumber) {
+        return res.status(400).json({ error: 'All fields are required.' });
+    }
+
+    if (!/^[A-Za-z\s]+$/.test(userName)) {
+        return res.status(400).json({ error: 'Invalid name format.' });
+    }
+
+    if (!/^\d{10}$/.test(phoneNumber)) {
+        return res.status(400).json({ error: 'Phone number must be 10 digits.' });
+    }
+
+    if (new Date(checkIn) >= new Date(checkOut)) {
+        return res.status(400).json({ error: 'Check-out date must be after check-in date.' });
+    }
+
+    try {
+        // Insert booking details into the database
+        const query = 
+            INSERT INTO bookings (user_name, phone_number, check_in, check_out, room_number) 
+            VALUES (?, ?, ?, ?, ?);
+        const [result] = await db.execute(query, [userName, phoneNumber, checkIn, checkOut, roomNumber]);
+
+        // Update room status to 'Booked'
+        const updateRoomQuery = 'UPDATE rooms SET status = "Booked" WHERE room_number = ?';
+        await db.execute(updateRoomQuery, [roomNumber]);
+
+        res.status(200).json({ message: 'Booking successful!', bookingId: result.insertId });
+    } catch (err) {
+        console.error('Database Error:', err);
+        res.status(500).json({ error: 'Database error. Please try again later.' });
+    }
+});
+
+// Cancel booking
+app.post('/api/cancel-booking', async (req, res) => {
+    const { user_name, phone_number, room_number } = req.body;
+
+    try {
+        const updateBookingQuery = 
+            UPDATE bookings
+            SET status = 'Cancelled', cancelled_at = NOW()
+            WHERE user_name = ? AND phone_number = ? AND room_number = ? AND status = 'Booked';
+
+        const [result] = await db.execute(updateBookingQuery, [user_name, phone_number, room_number]);
+
+        if (result.affectedRows > 0) {
+            const updateRoomQuery = 'UPDATE rooms SET status = "Available" WHERE room_number = ?';
+            await db.execute(updateRoomQuery, [room_number]);
+            return res.json({ success: true });
+        } else {
+            return res.json({ success: false, message: 'No matching booking found or already cancelled.' });
+        }
+    } catch (err) {
+        console.error('Error cancelling booking:', err);
+        res.status(500).json({ success: false, message: 'Server error. Please try again later.' });
+    }
+});
+
+// Get all booked rooms
+app.get('/api/bookings', async (req, res) => {
+    try {
+        const [results] = await db.query('SELECT room_number, type, price FROM rooms WHERE status = "Booked"');
+        res.json({ rooms: results });
+    } catch (err) {
+        console.error('Error fetching bookings:', err);
+        res.status(500).json({ message: 'Server error. Please try again later.' });
+    }
+});
+
+// Start the server
+const port = 3000;
+app.listen(port, () => {
+    console.log(Server running on port ${port});
+});
+ 
+CREATE DATABASE hotel_booking;
+
+USE hotel_booking;
+
+
+-- Create the 'rooms' table to store room details
+CREATE TABLE rooms (
+    room_number INT PRIMARY KEY,
+    type VARCHAR(50) NOT NULL,
+    price DECIMAL(10, 2) NOT NULL,
+    status VARCHAR(20) NOT NULL
+);
+
+SELECT * FROM rooms;
+
+SELECT * FROM bookings;
+
+-- Create the 'bookings' table to store booking details including phone number
+CREATE TABLE bookings (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    user_name VARCHAR(100) NOT NULL,
+    phone_number VARCHAR(15) NOT NULL,
+    check_in DATE NOT NULL,
+    check_out DATE NOT NULL,
+    room_number INT NOT NULL,
+    booking_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    status ENUM('booked', 'cancelled', 'completed') DEFAULT 'booked',
+    cancelled_at TIMESTAMP NULL,
+    FOREIGN KEY (room_number) REFERENCES rooms(room_number)
+);
+
+
+INSERT INTO rooms (room_number, type, price, status) VALUES
+(101, 'Deluxe Room', 120, 'Available'),
+(102, 'Deluxe Room', 120, 'Booked'),
+(103, 'Suite', 200, 'Available'),
+(104, 'Suite', 200, 'Booked'),
+(105, 'Standard Room', 80, 'Available'),
+(106, 'Standard Room', 80, 'Available'),
+(107, 'Family Room', 150, 'Booked'),
+(108, 'Family Room', 150, 'Available'),
+(109, 'Single Room', 60, 'Available'),
+(110, 'Single Room', 60, 'Booked'),
+(201, 'Luxury Suite', 250, 'Available'),
+(202, 'Presidential Suite', 400, 'Available');
