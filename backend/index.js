@@ -1,3 +1,4 @@
+require('dotenv').config(); 
 const express = require('express');
 const mysql = require('mysql2/promise');
 const cors = require('cors');
@@ -12,11 +13,11 @@ app.use(bodyParser.json());
 
 // Set up MySQL connection pool
 const db = mysql.createPool({
-    host: 'localhost',
-    user: 'root',
-    password: 'manojMSMK00@',
-    database: 'hotel_booking',
-    port: 3306,
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    port: process.env.DB_PORT,
 });
 
 // Test database connection
