@@ -22,7 +22,84 @@ const db = mysql.createPool({
 
 // Test database connection
 db.getConnection()
-    .then(() => console.log('Connected to the MySQL database'))
+    .then(() => {
+        console.log('Connected to the MySQL database')
+
+        const createTableQuery = `
+        CREATE TABLE IF NOT EXISTS rooms (
+          room_number INT PRIMARY KEY,
+          type VARCHAR(50) NOT NULL,
+          price DECIMAL(10, 2) NOT NULL,
+          status VARCHAR(20) NOT NULL
+        );
+      `;
+  
+      // Execute the query to create the table
+       db.query(createTableQuery)
+        .then(() => {
+          console.log('Rooms table checked/created successfully!');
+          
+  // SQL query to insert data into 'rooms' if it doesn't exist
+  const insertRoomsQuery = `
+  INSERT IGNORE INTO rooms (room_number, type, price, status) VALUES
+    (101, 'Deluxe Room', 120, 'Available'),
+    (102, 'Deluxe Room', 120, 'Booked'),
+    (103, 'Suite', 200, 'Available'),
+    (104, 'Suite', 200, 'Booked'),
+    (105, 'Standard Room', 80, 'Available'),
+    (106, 'Standard Room', 80, 'Available'),
+    (107, 'Family Room', 150, 'Booked'),
+    (108, 'Family Room', 150, 'Available'),
+    (109, 'Single Room', 60, 'Available'),
+    (110, 'Single Room', 60, 'Booked'),
+    (201, 'Luxury Suite', 250, 'Available'),
+    (202, 'Presidential Suite', 400, 'Available');
+`;
+
+// Execute the query to insert the data
+ db.query(insertRoomsQuery)
+  .then(() => {
+    console.log('Rooms data checked/inserted successfully!');
+  })
+  .catch(err => {
+    console.error('Error inserting the data:', err);
+  })
+  
+        })
+        .catch(err => {
+          console.error('Error creating the table:', err);
+        })
+
+
+        // SQL query to create the 'bookings' table if it doesn't exist
+    const createTableQueryw = `
+    CREATE TABLE IF NOT EXISTS bookings (
+      id INT AUTO_INCREMENT PRIMARY KEY,
+      user_name VARCHAR(100) NOT NULL,
+      phone_number VARCHAR(15) NOT NULL,
+      check_in DATE NOT NULL,
+      check_out DATE NOT NULL,
+      room_number INT NOT NULL,
+      booking_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      status ENUM('booked', 'cancelled', 'completed') DEFAULT 'booked',
+      cancelled_at TIMESTAMP NULL,
+      FOREIGN KEY (room_number) REFERENCES rooms(room_number)
+    );
+  `;
+
+  // Execute the query to create the table
+  db.query(createTableQueryw)
+    .then(() => {
+      console.log('Bookings table checked/created successfully!');
+    })
+    .catch(err => {
+      console.error('Error creating the table:', err);
+    })
+
+
+
+
+    })
     .catch((err) => {
         console.error('Error connecting to the database:', err);
         process.exit(1);
