@@ -64,7 +64,7 @@ db.getConnection()
   .catch(err => {
     console.error('Error inserting the data:', err);
   })
-  
+
         })
         .catch(err => {
           console.error('Error creating the table:', err);
@@ -192,7 +192,9 @@ app.get('/api/bookings', async (req, res) => {
 });
 
 // Start the server
-const port = 3000;
+const PORT = process.env.PORT || 3000;
+
+
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
 });
