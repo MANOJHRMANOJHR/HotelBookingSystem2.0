@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Fetch current bookings and populate the cancel booking select input
     function loadBookings() {
-        fetch('http://localhost:3000/api/bookings')  // Ensure the correct URL
+        fetch(`${BACKEND}/api/bookings`)  // Ensure the correct URL
             .then(response => response.json())
             .then(data => {
                  // Clear the cancelRoomNumber dropdown before adding options
@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
     
-        fetch('http://localhost:3000/api/cancel-booking', {
+        fetch(`${BACKEND}/api/cancel-booking`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -101,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
 //Booking failed: Booking successful!
 async function fetchRooms() {
     try {
-        const response = await fetch('http://localhost:3000/rooms');
+        const response = await fetch(`${BACKEND}/rooms`);
         const rooms = await response.json();
         const roomList = document.getElementById('room-list');
         const roomDropdown = document.getElementById('roomNumber'); // Room dropdown
@@ -177,7 +177,7 @@ async function bookRoom(event) {
         return;
     }
 
-    const response = await fetch('http://localhost:3000/book-room', {
+    const response = await fetch(`${BACKEND}/book-room`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userName, phoneNumber, checkIn, checkOut, roomNumber })
