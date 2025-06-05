@@ -1,124 +1,95 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" ng-app="hotelApp">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LuxStay Hotel</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
-   <script src="code.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LuxStay Hotel</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
+  
 </head>
-<body>
-      
-    <header>
-        <div class="container">
-            <h1>LuxStay Hotel</h1>
-            <nav>
-                <ul>
-                    <li><a href="#rooms">Rooms</a></li>
-                    <li><a href="#book">Book a Room</a></li>
-                </ul>
-            </nav>
-        </div>
-    </header>
+<body ng-controller="HotelController">
 
-    <section id="hero" class="hero">
-        <div class="hero-content">
-            <h2>Welcome to LuxStay</h2>
-            <p>Experience ultimate comfort and luxury. Book your stay today!</p>
-            <a href="#book" class="cta-button">Book Now</a>
-        </div>
-    </section>
+  <header>
+    <div class="container">
+      <h1>LuxStay Hotel</h1>
+      <nav>
+        <ul>
+          <li><a href="#rooms">Rooms</a></li>
+          <li><a href="#book">Book a Room</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
 
-    <section id="rooms" class="rooms-section container">
-        <h2>Available Rooms</h2>
-        <div id="room-list" class="room-list">
-            <!-- Rooms will be dynamically loaded here -->
-        </div>
-    </section>
-    <section id="book" class="booking-section">
-        <h2>Book Your Stay</h2>
-        <form id="booking-form" class="booking-form">
-            <input
-                type="text"
-                id="userName"
-                placeholder="Enter your name"
-                required
-                pattern="[A-Za-z\s]+"
-                title="Name should only contain letters and spaces."
-            />
-            <input
-                type="tel"
-                id="phoneNumber"
-                placeholder="Enter your phone number"
-                required
-                pattern="^\d{10}$"
-                title="Phone number should be 10 digits."
-            />
-            <input type="date" id="checkIn" required />
-            <input type="date" id="checkOut" required />
-            <select id="roomNumber" required>
-                <option value="">Select Room</option>
-                <!-- Room options will be dynamically populated -->
-             </select>
-            <button type="submit">Book Now</button>
-        </form>
-    </section>
-    
-    
+  <section id="hero" class="hero">
+    <div class="hero-content">
+      <h2>Welcome to LuxStay</h2>
+      <p>Experience ultimate comfort and luxury. Book your stay today!</p>
+      <a href="#book" class="cta-button">Book Now</a>
+    </div>
+  </section>
 
+  <section id="rooms" class="rooms-section container">
+    <h2>Available Rooms</h2>
+    <div id="room-list" class="room-list">
+      <div ng-repeat="room in rooms" class="room" ng-class="{'booked': room.status === 'Booked'}" ng-click="viewRoom(room)">
+        <h3>Room {{ room.room_number }}</h3>
+        <p>{{ room.type }}</p>
+        <p>${{ room.price }} per night</p>
+        <p class="status">{{ room.status }}</p>
+      </div>
+    </div>
+  </section>
 
-    <section id="cancel-booking" class="cancel-booking-section">
-        <h2>Cancel Your Booking</h2>
-        <form id="cancel-booking-form" class="cancel-booking-form">
-            <input
-                type="text"
-                id="cancelUserName"
-                placeholder="Enter your name"
-                required
-                pattern="[A-Za-z\s]+"
-                title="Name should only contain letters and spaces."
-            />
-            <input
-                type="tel"
-                id="cancelPhoneNumber"
-                placeholder="Enter your phone number"
-                required
-                pattern="^\d{10}$"
-                title="Phone number should be 10 digits."
-            />
-            <select id="cancelRoomNumber" required>
-                <option value="">Select Room to Cancel</option>
-                <!-- Room options will be dynamically populated here -->
-            </select>
-            <button type="submit">Cancel Booking</button>
-        </form>
-    </section>
-    
-    
-    
-    
-    
+  <section id="book" class="booking-section">
+    <h2>Book Your Stay</h2>
+    <form class="booking-form" ng-submit="bookRoom()">
+      <input type="text" ng-model="booking.userName" placeholder="Enter your name" required pattern="[A-Za-z\s]+" title="Name should only contain letters and spaces." />
+      <input type="tel" ng-model="booking.phoneNumber" placeholder="Enter your phone number" required pattern="^\d{10}$" title="Phone number should be 10 digits." />
+      <input type="date" ng-model="booking.checkIn" required />
+      <input type="date" ng-model="booking.checkOut" required />
+      <select ng-model="booking.roomNumber" required>
+        <option value="">Select Room</option>
+        <option ng-repeat="room in rooms" ng-if="room.status === 'Available'" value="{{room.room_number}}">
+          Room {{room.room_number}} - {{room.type}}
+        </option>
+      </select>
+      <button type="submit">Book Now</button>
+    </form>
+  </section>
 
-    <footer>
-        <div class="container">
-            <p>&copy; 2025 LuxStay Hotel</p>
-        </div>
-    </footer>
+  <section id="cancel-booking" class="cancel-booking-section">
+    <h2>Cancel Your Booking</h2>
+    <form class="cancel-booking-form" ng-submit="cancelBooking()">
+      <input type="text" ng-model="cancel.userName" placeholder="Enter your name" required pattern="[A-Za-z\s]+" />
+      <input type="tel" ng-model="cancel.phoneNumber" placeholder="Enter your phone number" required pattern="^\d{10}$" />
+      <select ng-model="cancel.roomNumber" required>
+        <option value="">Select Room to Cancel</option>
+        <option ng-repeat="room in rooms" ng-if="room.status === 'Booked'" value="{{room.room_number}}">
+          Room {{room.room_number}} - {{room.type}}
+        </option>
+      </select>
+      <button type="submit">Cancel Booking</button>
+    </form>
+  </section>
 
+  <footer>
+    <div class="container">
+      <p>&copy; 2025 LuxStay Hotel</p>
+    </div>
+  </footer>
 
-   <!-- Popup Modal -->
-   <div class="popup" id="roomPopup">
+  <div class="popup" id="roomPopup" ng-show="showModal">
     <div class="popup-content">
-      <button class="close-btn" id="closePopup">&times;</button>
-      <img id="popupImage" src="" alt="Room Image">
-      <h2 id="popupTitle"></h2>
-      <p id="popupDescription"></p>
-      <p><strong>Price:</strong> $<span id="popupPrice"></span> / night</p>
+      <button class="close-btn" ng-click="closeModal()">&times;</button>
+      <img ng-src="{{roomDetails.image}}" alt="Room Image">
+      <h2>{{roomDetails.title}}</h2>
+      <p>{{roomDetails.description}}</p>
+      <p><strong>Price:</strong> ${{roomDetails.price}} / night</p>
     </div>
   </div>
-    
-    <script src="script.js"></script>
-   
+<script src="script.js"></script>
 </body>
 </html>

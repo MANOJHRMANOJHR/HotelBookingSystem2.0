@@ -1,1 +1,0 @@
- const BACKEND = "https://hotelbookingsystem-szsz.onrender.com";

@@ -1,4 +1,22 @@
-const app = angular.module('hotelApp', []);
+
+const app = angular.module('hotelApp', ['ngRoute']);
+
+app.config(function($routeProvider) {
+  $routeProvider
+    .when('/hero', {
+      templateUrl: 'hero.html'
+    })
+    .when('/rooms', {
+      templateUrl: 'rooms.html'
+    })
+    .when('/book', {
+      templateUrl: 'book.html'
+    })
+    .otherwise({
+      redirectTo: '/hero'
+    });
+});
+
 
 app.controller('HotelController', function ($scope, $http, $filter) {
   const BACKEND = "http://localhost:3000";
@@ -9,12 +27,15 @@ app.controller('HotelController', function ($scope, $http, $filter) {
   $scope.roomDetails = {};
 
 
+//function to fetch rooms from the backend
   $scope.fetchRooms = function () {
     $http.get(`${BACKEND}/rooms`).then(function (response) {
       $scope.rooms = response.data;
     });
   };
 
+
+// Function to book a room
   $scope.bookRoom = function () {
 if (!$scope.booking) {
     alert("Please fill in the booking form.");
@@ -55,6 +76,10 @@ const bookingData = {
     });
   };
 
+
+
+
+// Function to cancel a booking
   $scope.cancelBooking = function () {
     if (!$scope.cancel.roomNumber || !$scope.cancel.userName || !$scope.cancel.phoneNumber) {
       alert("Please fill in all fields");
@@ -76,6 +101,7 @@ const bookingData = {
     });
   };
 
+
   $scope.viewRoom = function (room) {
     if (room.status === 'Booked') {
       alert('This room is already booked.');
@@ -91,6 +117,7 @@ const bookingData = {
     $scope.showModal = true;
   };
 
+  // Function to close the modal
   $scope.closeModal = function () {
     $scope.showModal = false;
   };

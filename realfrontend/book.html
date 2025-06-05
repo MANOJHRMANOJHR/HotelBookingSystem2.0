@@ -1,0 +1,31 @@
+<section id="book" class="booking-section">
+  <h2>Book Your Stay</h2>
+  <form class="booking-form" ng-submit="bookRoom()">
+    <input type="text" ng-model="booking.userName" placeholder="Enter your name" required pattern="[A-Za-z\s]+" />
+    <input type="tel" ng-model="booking.phoneNumber" placeholder="Enter your phone number" required pattern="^\d{10}$" />
+    <input type="date" ng-model="booking.checkIn" required />
+    <input type="date" ng-model="booking.checkOut" required />
+    <select ng-model="booking.roomNumber" required>
+      <option value="">Select Room</option>
+      <option ng-repeat="room in rooms" ng-if="room.status === 'Available'" value="{{room.room_number}}">
+        Room {{room.room_number}} - {{room.type}}
+      </option>
+    </select>
+    <button type="submit">Book Now</button>
+  </form>
+</section>
+
+<section id="cancel-booking" class="cancel-booking-section">
+  <h2>Cancel Your Booking</h2>
+  <form class="cancel-booking-form" ng-submit="cancelBooking()">
+    <input type="text" ng-model="cancel.userName" placeholder="Enter your name" required pattern="[A-Za-z\s]+" />
+    <input type="tel" ng-model="cancel.phoneNumber" placeholder="Enter your phone number" required pattern="^\d{10}$" />
+    <select ng-model="cancel.roomNumber" required>
+      <option value="">Select Room to Cancel</option>
+      <option ng-repeat="room in rooms" ng-if="room.status === 'Booked'" value="{{room.room_number}}">
+        Room {{room.room_number}} - {{room.type}}
+      </option>
+    </select>
+    <button type="submit">Cancel Booking</button>
+  </form>
+</section>

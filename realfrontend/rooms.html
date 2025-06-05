@@ -1,0 +1,11 @@
+<section id="rooms" class="rooms-section container">
+  <h2>Available Rooms</h2>
+  <div id="room-list" class="room-list">
+    <div ng-repeat="room in rooms" class="room" ng-class="{'booked': room.status === 'Booked'}" ng-click="viewRoom(room)">
+      <h3>Room {{ room.room_number }}</h3>
+      <p>{{ room.type }}</p>
+      <p>${{ room.price }} per night</p>
+      <p class="status">{{ room.status }}</p>
+    </div>
+  </div>
+</section>
